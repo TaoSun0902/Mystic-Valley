@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="dragon eye">
+  <defs>
+    <radialGradient id="eyeGlow" cx="50%" cy="50%" r="58%">
+      <stop offset="0%" stop-color="#e0f2fe"/>
+      <stop offset="42%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="iris" x1="0%" x2="100%" y1="50%" y2="50%">
+      <stop offset="0%" stop-color="#082f49"/>
+      <stop offset="50%" stop-color="#7dd3fc"/>
+      <stop offset="100%" stop-color="#082f49"/>
+    </linearGradient>
+  </defs>
+  <circle cx="90" cy="90" r="84" fill="url(#eyeGlow)"/>
+  <path d="M18 90c20-34 45-50 72-50s52 16 72 50c-20 34-45 50-72 50S38 124 18 90Z" fill="#020617" stroke="#bae6fd" stroke-width="5"/>
+  <ellipse cx="90" cy="90" rx="48" ry="42" fill="url(#iris)" stroke="#e0f2fe" stroke-width="4"/>
+  <ellipse cx="90" cy="90" rx="12" ry="36" fill="#020617"/>
+  <circle cx="73" cy="70" r="8" fill="#f0f9ff"/>
+  <path d="M30 92c36 12 82 12 120 0" fill="none" stroke="#7dd3fc" stroke-width="3" opacity=".75"/>
+</svg>

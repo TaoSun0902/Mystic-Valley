@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-label="alchemy sigil">
+  <defs>
+    <radialGradient id="sigilGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e0f2fe" stop-opacity=".75"/>
+      <stop offset="45%" stop-color="#38bdf8" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="320" height="320" fill="none"/>
+  <circle cx="160" cy="160" r="150" fill="url(#sigilGlow)"/>
+  <circle cx="160" cy="160" r="108" fill="none" stroke="#bae6fd" stroke-width="3"/>
+  <circle cx="160" cy="160" r="76" fill="none" stroke="#7dd3fc" stroke-width="2" stroke-dasharray="8 10"/>
+  <path d="M160 54 252 214H68L160 54Z" fill="none" stroke="#e0f2fe" stroke-width="3"/>
+  <path d="M160 266 68 106h184L160 266Z" fill="none" stroke="#38bdf8" stroke-width="3"/>
+  <circle cx="160" cy="160" r="18" fill="none" stroke="#e0f2fe" stroke-width="4"/>
+  <circle cx="160" cy="54" r="10" fill="#bae6fd"/>
+  <circle cx="68" cy="214" r="10" fill="#bae6fd"/>
+  <circle cx="252" cy="214" r="10" fill="#bae6fd"/>
+</svg>

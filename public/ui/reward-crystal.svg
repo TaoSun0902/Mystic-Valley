@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" role="img" aria-label="reward crystal">
+  <defs>
+    <linearGradient id="crystal" x1="20%" x2="80%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef3c7"/>
+      <stop offset="45%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#7c2d12"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#fde68a" stop-opacity=".85"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="110" cy="110" r="104" fill="url(#halo)"/>
+  <path d="M110 16 174 76l-22 112H68L46 76 110 16Z" fill="url(#crystal)" stroke="#fff7ed" stroke-width="4"/>
+  <path d="M110 16v172M46 76h128M68 188l42-112 42 112" fill="none" stroke="#fff7ed" stroke-width="3" opacity=".55"/>
+  <circle cx="70" cy="55" r="5" fill="#fff7ed"/>
+  <circle cx="156" cy="48" r="4" fill="#fff7ed"/>
+  <circle cx="178" cy="112" r="3" fill="#fff7ed"/>
+</svg>

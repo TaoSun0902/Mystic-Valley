@@ -1,0 +1,389 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: #080b0f;
+}
+
+body {
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font: inherit;
+}
+
+.mobile-stage {
+  max-width: 430px;
+}
+
+.hotspot-pulse {
+  animation: hotspot-pulse 1.4s ease-in-out infinite;
+}
+
+.game-dock,
+.rune-panel,
+.game-reward {
+  border: 1px solid rgba(254, 243, 199, 0.24);
+  border-radius: 8px 8px 0 0;
+  background:
+    linear-gradient(135deg, rgba(12, 18, 24, 0.82), rgba(5, 9, 14, 0.66)),
+    radial-gradient(circle at 20% 0%, rgba(217, 249, 157, 0.18), transparent 42%);
+  box-shadow:
+    0 0 28px rgba(249, 115, 22, 0.18),
+    inset 0 0 22px rgba(254, 243, 199, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.game-dock {
+  border-color: rgba(253, 230, 138, 0.38);
+  background:
+    linear-gradient(145deg, rgba(16, 23, 19, 0.9), rgba(3, 7, 18, 0.78)),
+    radial-gradient(circle at 18% 0%, rgba(253, 230, 138, 0.15), transparent 34%),
+    radial-gradient(circle at 88% 12%, rgba(125, 211, 252, 0.12), transparent 36%);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 12px 36px rgba(0, 0, 0, 0.52),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 0 34px rgba(253, 230, 138, 0.08);
+}
+
+.game-item-hotspot {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  touch-action: manipulation;
+}
+
+.tap-cue {
+  position: absolute;
+  left: 50%;
+  top: -12px;
+  translate: -50% 0;
+  border: 1px solid rgba(224, 242, 254, 0.58);
+  background: rgba(2, 6, 23, 0.58);
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #e0f2fe;
+  box-shadow: 0 0 14px rgba(125, 211, 252, 0.34);
+}
+
+.game-icon {
+  display: inline-block;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  filter: drop-shadow(0 0 12px rgba(217, 249, 157, 0.55));
+}
+
+.game-icon-grass {
+  width: 100%;
+  height: 100%;
+  min-width: 42px;
+  min-height: 42px;
+  background-image: url("/ui/glowing-grass.svg");
+}
+
+.game-icon-eye {
+  width: 100%;
+  height: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  background-image: url("/ui/dragon-eye.svg");
+  filter: drop-shadow(0 0 14px rgba(125, 211, 252, 0.72));
+}
+
+.game-slot {
+  position: relative;
+  display: grid;
+  height: 68px;
+  place-items: center;
+  border: 1px solid rgba(253, 230, 138, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.38)),
+    radial-gradient(circle at 50% 40%, rgba(125, 211, 252, 0.08), transparent 56%);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+    inset 0 12px 24px rgba(255, 255, 255, 0.04),
+    0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.game-slot::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.game-slot .game-icon {
+  width: 56px;
+  height: 56px;
+}
+
+.game-slot-filled {
+  border-color: rgba(186, 230, 253, 0.5);
+  background:
+    linear-gradient(180deg, rgba(125, 211, 252, 0.14), rgba(0, 0, 0, 0.36)),
+    radial-gradient(circle at center, rgba(125, 211, 252, 0.28), transparent 58%);
+  box-shadow:
+    inset 0 0 22px rgba(125, 211, 252, 0.18),
+    0 0 18px rgba(125, 211, 252, 0.18);
+}
+
+.alchemy-drop {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  place-items: center;
+  border: 1px dashed rgba(186, 230, 253, 0.42);
+  background: rgba(8, 47, 73, 0.18);
+  box-shadow: inset 0 0 24px rgba(56, 189, 248, 0.12);
+}
+
+.alchemy-drop-active {
+  border-color: rgba(224, 242, 254, 0.95);
+  background: rgba(125, 211, 252, 0.2);
+}
+
+.alchemy-sigil {
+  position: absolute;
+  inset: -58px 0 auto;
+  height: 240px;
+  background: url("/ui/alchemy-sigil.svg") center / contain no-repeat;
+  opacity: 0.86;
+  animation: sigil-spin 12s linear infinite;
+}
+
+.dragon-socket {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(186, 230, 253, 0.62);
+  background: rgba(14, 165, 233, 0.1);
+  box-shadow:
+    0 0 22px rgba(125, 211, 252, 0.34),
+    inset 0 0 18px rgba(186, 230, 253, 0.12);
+  animation: hotspot-pulse 1.2s ease-in-out infinite;
+}
+
+.dragon-socket .game-icon {
+  width: 72%;
+  height: 72%;
+  opacity: 0.72;
+}
+
+.dragon-eye-burst {
+  position: absolute;
+  inset: -70%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(224, 242, 254, 0.95) 0 12%, rgba(56, 189, 248, 0.52) 24%, transparent 62%),
+    conic-gradient(
+      from 20deg,
+      transparent,
+      rgba(125, 211, 252, 0.85),
+      transparent,
+      rgba(224, 242, 254, 0.76),
+      transparent
+    );
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: dragon-eye-burst 0.62s ease-out both;
+}
+
+.dragon-socket-count {
+  position: absolute;
+  right: -6px;
+  bottom: -8px;
+  min-width: 34px;
+  border: 1px solid rgba(186, 230, 253, 0.5);
+  background: rgba(2, 6, 23, 0.72);
+  padding: 2px 5px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #e0f2fe;
+  box-shadow: 0 0 12px rgba(125, 211, 252, 0.35);
+}
+
+.dragon-socket-active {
+  scale: 1.08;
+  background: rgba(125, 211, 252, 0.28);
+}
+
+.game-token {
+  display: inline-flex;
+  min-height: 58px;
+  touch-action: none;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: transform 160ms ease, opacity 160ms ease, background 160ms ease;
+}
+
+.game-token .game-icon {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.game-token-grass {
+  border-color: rgba(190, 242, 100, 0.45);
+  background: rgba(132, 204, 22, 0.14);
+  color: #ecfccb;
+}
+
+.game-token-eye {
+  border-color: rgba(186, 230, 253, 0.56);
+  background: rgba(14, 165, 233, 0.18);
+  color: #e0f2fe;
+}
+
+.rune-panel {
+  overflow: hidden;
+  border-color: rgba(186, 230, 253, 0.3);
+  background:
+    linear-gradient(135deg, rgba(3, 7, 18, 0.72), rgba(8, 47, 73, 0.7)),
+    radial-gradient(circle at 80% 20%, rgba(125, 211, 252, 0.18), transparent 38%);
+}
+
+.rune-console-art {
+  position: absolute;
+  inset: 4px 8px auto;
+  height: 94px;
+  background: url("/ui/rune-console.svg") center / contain no-repeat;
+  opacity: 0.48;
+}
+
+.reward-crystal {
+  width: 92px;
+  height: 92px;
+  background: url("/ui/reward-crystal.svg") center / contain no-repeat;
+  filter: drop-shadow(0 0 18px rgba(251, 191, 36, 0.58));
+}
+
+.game-reward {
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.78), rgba(69, 26, 3, 0.58)),
+    radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.22), transparent 44%);
+}
+
+.screen-shake {
+  animation: screen-shake 0.7s ease-in-out infinite;
+}
+
+.ui-shake {
+  animation: ui-shake 0.36s ease-in-out;
+}
+
+.reward-card {
+  animation: reward-rise 0.5s ease-out both;
+}
+
+@keyframes hotspot-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(217, 249, 157, 0.45));
+  }
+  50% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 22px rgba(217, 249, 157, 0.78));
+  }
+}
+
+@keyframes sigil-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dragon-eye-burst {
+  from {
+    opacity: 0;
+    transform: scale(0.28) rotate(0deg);
+  }
+  28% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.22) rotate(90deg);
+  }
+}
+
+@keyframes screen-shake {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate3d(1px, -1px, 0);
+  }
+  50% {
+    transform: translate3d(-1px, 1px, 0);
+  }
+  75% {
+    transform: translate3d(1px, 1px, 0);
+  }
+}
+
+@keyframes ui-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-7px);
+  }
+  50% {
+    transform: translateX(6px);
+  }
+  75% {
+    transform: translateX(-4px);
+  }
+}
+
+@keyframes reward-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .landscape-hint {
+    display: grid;
+  }
+}

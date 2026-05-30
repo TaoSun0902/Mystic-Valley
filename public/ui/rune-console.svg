@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 180" role="img" aria-label="rune console">
+  <defs>
+    <linearGradient id="panel" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#082f49"/>
+      <stop offset="55%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <path d="M26 20h368l18 28v84l-24 28H32L8 132V48L26 20Z" fill="url(#panel)" stroke="#7dd3fc" stroke-width="4"/>
+  <path d="M56 60h308M56 120h308" stroke="#38bdf8" stroke-width="2" opacity=".5"/>
+  <g filter="url(#glow)" fill="none" stroke="#e0f2fe" stroke-width="3">
+    <path d="M85 88h22l-11-24v48"/>
+    <path d="M145 64v48l30-24-30-24Z"/>
+    <path d="M217 64c-26 18-26 30 0 48"/>
+    <path d="M270 64v48m0-24h34"/>
+    <path d="M346 64v48l-34-48v48"/>
+  </g>
+</svg>
