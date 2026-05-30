@@ -119,23 +119,39 @@ export function InteractiveVideoExperience() {
 
   function handleCollect(itemId: string) {
     addItem(itemId);
+    // Haptic feedback for collecting
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(15);
+    }
 
     const nextInventory = inventory.includes(itemId) ? inventory : [...inventory, itemId];
     const collectedGrassCount = nextInventory.filter((id) => grassIds.includes(id)).length;
 
     if (collectedGrassCount >= 3) {
       completeCheckpoint("collect");
+      // Success vibration pattern
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([30, 50, 30]);
+      }
       window.setTimeout(() => playNext("DRAGON_REVEAL_PLAYING"), 520);
     }
   }
 
   function handleAlchemyComplete() {
     completeCheckpoint("alchemy");
+    // Heavy haptic for mechanism trigger
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(60);
+    }
     playNext("MECHANISM_PLAYING");
   }
 
   function handleLightSigilComplete() {
     completeCheckpoint("puzzle");
+    // Victory haptic
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate([40, 100, 40]);
+    }
     playNext("CLIMAX_PLAYING");
   }
 
@@ -315,6 +331,11 @@ function AlchemyLayer({ onComplete }: { onComplete: () => void }) {
     removeItem(itemId);
     setEyeGlowKey((value) => value + 1);
 
+    // Haptic for successful drop
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(20);
+    }
+
     if (nextItems.length === 3) {
       insertDragonEye();
       window.setTimeout(onComplete, 520);
@@ -392,6 +413,10 @@ function LightSigilPuzzle({ onComplete }: { onComplete: () => void }) {
       setActiveNode(node);
       const nextMistakeCount = mistakeCount + 1;
       setMistakeCount(nextMistakeCount);
+      // Warning vibration for mistake
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(100);
+      }
       window.setTimeout(nextMistakeCount >= 3 ? replayPattern : resetPattern, 260);
       return;
     }
@@ -401,6 +426,10 @@ function LightSigilPuzzle({ onComplete }: { onComplete: () => void }) {
     setStep(nextStep);
     setLitNodes(nextLitNodes);
     setActiveNode(node);
+    // Short tick for correct step
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(10);
+    }
     window.setTimeout(() => setActiveNode(null), 220);
 
     if (nextStep === lightPattern.length) {
