@@ -238,6 +238,31 @@ button {
   pointer-events: auto;
 }
 
+.dragon-eye-drop-burst {
+  position: absolute;
+  inset: -96%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.82) 0 5%, rgba(224, 242, 254, 0.56) 12%, rgba(125, 211, 252, 0.28) 28%, rgba(56, 189, 248, 0.12) 48%, transparent 72%),
+    radial-gradient(ellipse at 50% 62%, rgba(186, 230, 253, 0.26), rgba(125, 211, 252, 0.12) 36%, transparent 68%);
+  filter: blur(0.5px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: dragon-eye-drop-burst 1.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.dragon-eye-drop-burst::after {
+  content: "";
+  position: absolute;
+  inset: 42%;
+  border-radius: 999px;
+  border: 1px solid rgba(224, 242, 254, 0.58);
+  box-shadow:
+    0 0 12px rgba(224, 242, 254, 0.5),
+    0 0 28px rgba(56, 189, 248, 0.36);
+  animation: dragon-eye-soft-ring 1.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .light-sigil-layer {
   background:
     radial-gradient(circle at 50% 46%, rgba(186, 230, 253, 0.16), transparent 24%),
@@ -559,6 +584,37 @@ button {
   to {
     opacity: 0;
     transform: scale(1.18);
+  }
+}
+
+@keyframes dragon-eye-drop-burst {
+  from {
+    opacity: 0;
+    transform: scale(0.18);
+  }
+  18% {
+    opacity: 0.92;
+  }
+  58% {
+    opacity: 0.42;
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes dragon-eye-soft-ring {
+  from {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+  22% {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.25);
   }
 }
 

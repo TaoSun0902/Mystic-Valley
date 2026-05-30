@@ -295,6 +295,7 @@ function AlchemyLayer({ onComplete }: { onComplete: () => void }) {
   const removeItem = useGameState((state) => state.removeItem);
   const insertDragonEye = useGameState((state) => state.insertDragonEye);
   const [offeredGrass, setOfferedGrass] = useState<string[]>([]);
+  const [eyeGlowKey, setEyeGlowKey] = useState(0);
 
   const availableGrass = inventory.filter((id) => grassIds.includes(id));
 
@@ -312,6 +313,7 @@ function AlchemyLayer({ onComplete }: { onComplete: () => void }) {
     const nextItems = [...offeredGrass, itemId];
     setOfferedGrass(nextItems);
     removeItem(itemId);
+    setEyeGlowKey((value) => value + 1);
 
     if (nextItems.length === 3) {
       insertDragonEye();
@@ -322,13 +324,13 @@ function AlchemyLayer({ onComplete }: { onComplete: () => void }) {
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <HintPill>草を瞳へ</HintPill>
-      <HiddenDragonEyeDropZone />
+      <HiddenDragonEyeDropZone glowKey={eyeGlowKey} />
       <InventoryDock items={availableGrass} draggable />
     </DndContext>
   );
 }
 
-function HiddenDragonEyeDropZone() {
+function HiddenDragonEyeDropZone({ glowKey }: { glowKey: number }) {
   const { setNodeRef } = useDroppable({ id: dragonEyeSocket.id });
 
   return (
@@ -342,7 +344,11 @@ function HiddenDragonEyeDropZone() {
         height: `${dragonEyeSocket.height}%`
       }}
       aria-label={dragonEyeSocket.label}
-    />
+    >
+      {glowKey > 0 ? (
+        <span key={glowKey} className="dragon-eye-drop-burst" />
+      ) : null}
+    </div>
   );
 }
 
@@ -351,6 +357,8 @@ function LightSigilPuzzle({ onComplete }: { onComplete: () => void }) {
   const [activeNode, setActiveNode] = useState<number | null>(null);
   const [litNodes, setLitNodes] = useState<number[]>([]);
   const [isSolved, setIsSolved] = useState(false);
+  const [mistakeCount, setMistakeCount] = useState(0);
+  const [replayKey, setReplayKey] = useState(0);
 
   useEffect(() => {
     const timers = lightPattern.map((node, index) =>
@@ -361,12 +369,18 @@ function LightSigilPuzzle({ onComplete }: { onComplete: () => void }) {
     );
 
     return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, []);
+  }, [replayKey]);
 
   function resetPattern() {
     setStep(0);
     setLitNodes([]);
     setActiveNode(null);
+  }
+
+  function replayPattern() {
+    resetPattern();
+    setMistakeCount(0);
+    setReplayKey((key) => key + 1);
   }
 
   function handleNodePress(node: number) {
@@ -376,7 +390,9 @@ function LightSigilPuzzle({ onComplete }: { onComplete: () => void }) {
 
     if (node !== lightPattern[step]) {
       setActiveNode(node);
-      window.setTimeout(resetPattern, 260);
+      const nextMistakeCount = mistakeCount + 1;
+      setMistakeCount(nextMistakeCount);
+      window.setTimeout(nextMistakeCount >= 3 ? replayPattern : resetPattern, 260);
       return;
     }
 
