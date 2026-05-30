@@ -1,169 +1,113 @@
 # Mystic Valley H5
 
-Mystic Valley is a mobile-first interactive video H5 built with Next.js. The experience combines a vertical story video with lightweight game interactions: collecting glowing grass, dragging it into a dragon eye, solving a light sigil puzzle, and receiving a PixVerse Gift Code at the end.
+[English](#english) | [中文](#中文)
 
-## Features
+---
 
-- Mobile portrait interactive video experience.
-- Typewriter intro story before the video starts.
-- Timeline-based checkpoints at `00:08`, `00:18`, `00:28`, and `00:39`.
-- Click-to-collect glowing grass hotspots.
-- Inventory dock with draggable glowing grass.
-- Hidden dragon-eye drop zone with soft light feedback.
-- Hand-shaped light sigil sequence puzzle.
-- Reward card with gift code copy, replay, and PixVerse official site link.
+## English
 
-## Tech Stack
+Mystic Valley is a mobile-first interactive video H5 built with **Next.js 14**. The experience seamlessly blends a vertical narrative video with immersive game mechanics: collecting mystical items, environmental interactions, and ancient sigil puzzles.
 
-- Next.js 14
-- React 18
-- TypeScript
-- Tailwind CSS
-- Zustand
-- `@dnd-kit/core`
-- `lucide-react`
+### 🌟 Features
 
-## Getting Started
+- **Immersive Narrative**: Vertical portrait video experience optimized for mobile devices.
+- **Interactive Checkpoints**: Dynamic pauses at key story moments (`00:08`, `00:18`, `00:28`) for player interaction.
+- **Haptic Feedback**: Integrated **Vibration API** for tactile responses during collection, errors, and success (requires HTTPS).
+- **Advanced UI**: A mystic yet tech-savvy interface with scanlines, glitch effects, and floating crystal animations.
+- **Puzzle Mechanics**:
+  - **Discovery**: Click-to-collect glowing grass hotspots.
+  - **Interaction**: Drag-and-drop inventory items into the environment (Dragon Eye).
+  - **Logic**: Sequence-based light sigil puzzle on a hand-shaped matrix.
+- **Reward System**: Automated gift code generation with one-click copy and redirection to PixVerse.
 
-Install dependencies:
+### 🛠 Tech Stack
 
+- **Framework**: Next.js 14 (App Router)
+- **State Management**: Zustand
+- **Drag & Drop**: `@dnd-kit/core`
+- **Styling**: Tailwind CSS & Global CSS Animations
+- **Icons**: Lucide React
+
+### 🚀 Getting Started
+
+#### Local Development
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+3. Open `http://localhost:3000` in your browser.
+
+#### Mobile Testing (Local Network)
+
+To test on a physical phone within the same Wi-Fi:
+1. Find your local IP: `ipconfig` (Windows) or `ifconfig` (Mac).
+2. Access `http://<YOUR_IP>:3000` on your phone.
+*Note: Haptic feedback requires HTTPS to function in most mobile browsers.*
+
+### 📦 Deployment
+
+This project is optimized for **Vercel**:
 ```bash
-npm install
+vercel --prod
 ```
+To enable public access without authentication, ensure **Deployment Protection** is disabled in your Vercel project settings.
 
-Run the development server:
+---
 
+## 中文
+
+Mystic Valley 是一款基于 **Next.js 14** 开发的移动端优先互动视频 H5。该项目将竖屏叙事视频与沉浸式游戏机制完美融合：包括收集神秘道具、环境交互以及古老光阵解谜。
+
+### 🌟 核心特性
+
+- **沉浸式叙事**：针对移动端优化的 9:16 竖屏视频体验。
+- **动态交互点**：在剧情关键时刻（`00:08`, `00:18`, `00:28`）自动暂停并触发互动。
+- **触感反馈**：集成 **Vibration API**，在收集道具、操作错误或成功时提供不同节奏的手机震动（需 HTTPS 环境）。
+- **高质感 UI**：融合神秘感与科技感的界面，包含扫描线、故障艺术（Glitch）以及悬浮晶体动画。
+- **解谜机制**：
+  - **探索**：点击收集画面中的荧光草热区。
+  - **交互**：将背包道具拖拽至特定环境区域（龙眼）激活机关。
+  - **逻辑**：在手形矩阵上完成特定顺序的光阵点亮解谜。
+- **奖励系统**：完成体验后自动发放礼包码，支持一键复制及官网跳转。
+
+### 🛠 技术栈
+
+- **框架**：Next.js 14 (App Router)
+- **状态管理**：Zustand
+- **拖拽库**：`@dnd-kit/core`
+- **样式系统**：Tailwind CSS & 全局 CSS 动画
+- **图标**：Lucide React
+
+### 🚀 快速启动
+
+#### 本地开发
+
+1. 安装依赖：
+   ```bash
+   npm install
+   ```
+2. 启动开发服务器：
+   ```bash
+   npm run dev
+   ```
+3. 在浏览器访问 `http://localhost:3000`。
+
+#### 手机本地测试（局域网）
+
+在同一 Wi-Fi 环境下使用手机测试：
+1. 获取电脑 IP：终端运行 `ipconfig`。
+2. 手机访问 `http://<您的IP>:3000`。
+*注意：大多数移动端浏览器要求在 HTTPS 环境下才允许触发震动 API。*
+
+### 📦 部署发布
+
+项目针对 **Vercel** 进行了优化：
 ```bash
-npm run dev
+vercel --prod
 ```
-
-Open:
-
-```text
-http://localhost:3000
-```
-
-## Play On A Phone
-
-Make sure your computer and phone are on the same Wi-Fi network.
-
-Start the dev server so it listens on the local network:
-
-```bash
-npm run dev -- -H 0.0.0.0
-```
-
-Find your computer's local IP address:
-
-```powershell
-ipconfig
-```
-
-Then open this URL on your phone:
-
-```text
-http://YOUR_COMPUTER_IP:3000
-```
-
-Example:
-
-```text
-http://192.168.1.23:3000
-```
-
-If it does not open, allow `node.exe` through Windows Firewall or check that both devices are on the same network.
-
-## Gameplay Flow
-
-1. Intro
-   - A Japanese typewriter story introduces Mystic Valley.
-   - The player taps `冒険を始める` to begin.
-
-2. `00:08` Glowing Grass
-   - The video pauses.
-   - The player taps 3 glowing grass items.
-   - Collected items appear in the bottom inventory.
-
-3. `00:18` Dragon Eye
-   - The video pauses on the dragon-eye scene.
-   - The player drags glowing grass from the inventory into the hidden eye area.
-   - Each successful drop triggers a soft blue-white light effect.
-
-4. `00:28` Light Sigil
-   - The video pauses.
-   - A hand-shaped light sigil shows a node sequence.
-   - The player repeats the sequence.
-   - After 3 mistakes, the correct sequence is shown again.
-
-5. `00:39` Reward
-   - The reward card appears.
-   - The player can copy the PixVerse Gift Code, replay, or open the PixVerse official site.
-
-## Main Files
-
-```text
-app/page.tsx
-app/globals.css
-components/InteractiveVideoExperience.tsx
-lib/interactionFlow.ts
-store/gameStore.ts
-public/videos/main.mp4
-public/ui/glowing-grass.svg
-public/ui/dragon-eye.svg
-public/ui/reward-crystal.svg
-```
-
-## Timeline Configuration
-
-Checkpoints are configured in `lib/interactionFlow.ts`:
-
-```ts
-export const CHECKPOINTS = {
-  collect: 8,
-  alchemy: 18,
-  puzzle: 28,
-  reward: 39
-} as const;
-```
-
-Collect and dragon-eye positions are also percentage-based in the same file.
-
-## Useful Commands
-
-Lint:
-
-```bash
-npm run lint
-```
-
-Type check:
-
-```bash
-npx tsc --noEmit
-```
-
-Build:
-
-```bash
-npm run build
-```
-
-Start production server after build:
-
-```bash
-npm run start
-```
-
-## Documentation
-
-Detailed design and technical documents:
-
-- [Mystic Valley Interactive H5 Technical Document.md](Mystic%20Valley%20Interactive%20H5%20Technical%20Document.md)
-- [interactive_video_flow_design_v2_integrated.md](interactive_video_flow_design_v2_integrated.md)
-
-## Notes
-
-- The project is optimized for portrait mobile screens.
-- Keep visible in-game text minimal so the video remains immersive.
-- `tsconfig.tsbuildinfo` is a temporary type-check file and should not be committed.
-- If Next.js dev mode shows a white screen after large file rewrites, restart `npm run dev`.
+如需直接分享链接供他人测试，请在 Vercel 项目设置中关闭 **Deployment Protection**（访问保护）。
