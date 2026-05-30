@@ -147,6 +147,22 @@ button {
   backdrop-filter: blur(8px);
 }
 
+.sound-toggle {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(224, 242, 254, 0.34);
+  background: rgba(2, 6, 23, 0.42);
+  color: #e0f2fe;
+  box-shadow: 0 0 16px rgba(125, 211, 252, 0.16);
+  backdrop-filter: blur(8px);
+}
+
+.sound-toggle:active {
+  scale: 0.96;
+}
+
 .tap-cue {
   position: absolute;
   left: 50%;

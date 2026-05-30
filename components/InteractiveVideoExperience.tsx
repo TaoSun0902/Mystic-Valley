@@ -6,7 +6,7 @@ import {
   useDraggable,
   useDroppable
 } from "@dnd-kit/core";
-import { Check, Copy, ExternalLink, Play, RotateCcw } from "lucide-react";
+import { Check, Copy, ExternalLink, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import {
   CHECKPOINTS,
@@ -21,8 +21,15 @@ const lightPattern = [0, 2, 4, 1, 3];
 const introCopy =
   "世界の果て、青き霧の谷。\n失われたルーンを解き、\n眠れる巨竜を呼び覚ませ。\n旅は、ここから始まる。";
 
+type BgmEngine = {
+  context: AudioContext;
+  gain: GainNode;
+  stop: () => void;
+};
+
 export function InteractiveVideoExperience() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const bgmRef = useRef<BgmEngine | null>(null);
   const phase = useGameState((state) => state.phase);
   const inventory = useGameState((state) => state.inventory);
   const completedCheckpoints = useGameState((state) => state.completedCheckpoints);
@@ -33,6 +40,7 @@ export function InteractiveVideoExperience() {
 
   const [needsStart, setNeedsStart] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const [isBgmEnabled, setIsBgmEnabled] = useState(true);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -143,6 +151,7 @@ export function InteractiveVideoExperience() {
     resetGame();
     setNeedsStart(false);
     setShowIntro(true);
+    stopBgm();
 
     const video = videoRef.current;
     if (video) {
@@ -154,10 +163,40 @@ export function InteractiveVideoExperience() {
   function handleIntroStart() {
     setShowIntro(false);
     setNeedsStart(false);
+    if (isBgmEnabled) {
+      startBgm();
+    }
 
     const video = videoRef.current;
     if (video) {
       void video.play().catch(() => setNeedsStart(true));
+    }
+  }
+
+  function startBgm() {
+    if (bgmRef.current) {
+      void bgmRef.current.context.resume();
+      return;
+    }
+
+    bgmRef.current = createMysticBgm();
+  }
+
+  function stopBgm() {
+    bgmRef.current?.stop();
+    bgmRef.current = null;
+  }
+
+  function toggleBgm() {
+    if (isBgmEnabled) {
+      setIsBgmEnabled(false);
+      stopBgm();
+      return;
+    }
+
+    setIsBgmEnabled(true);
+    if (!showIntro) {
+      startBgm();
     }
   }
 
@@ -189,6 +228,17 @@ export function InteractiveVideoExperience() {
 
       {showIntro ? <IntroOverlay onStart={handleIntroStart} /> : null}
 
+      {!showIntro ? (
+        <button
+          type="button"
+          aria-label={isBgmEnabled ? "bgm off" : "bgm on"}
+          onClick={toggleBgm}
+          className="sound-toggle absolute right-3 top-[calc(env(safe-area-inset-top)+12px)] z-40"
+        >
+          {isBgmEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+        </button>
+      ) : null}
+
       {needsStart ? (
         <button
           type="button"
@@ -207,6 +257,83 @@ export function InteractiveVideoExperience() {
       ) : null}
     </>
   );
+}
+
+function createMysticBgm(): BgmEngine {
+  const audioWindow = window as typeof window & {
+    webkitAudioContext?: typeof AudioContext;
+  };
+  const AudioContextClass = audioWindow.AudioContext || audioWindow.webkitAudioContext;
+
+  if (!AudioContextClass) {
+    throw new Error("Web Audio API is not supported.");
+  }
+
+  const context = new AudioContextClass();
+  const gain = context.createGain();
+  const filter = context.createBiquadFilter();
+  const delay = context.createDelay(2.4);
+  const feedback = context.createGain();
+
+  gain.gain.setValueAtTime(0.0001, context.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.045, context.currentTime + 1.6);
+
+  filter.type = "lowpass";
+  filter.frequency.value = 820;
+  filter.Q.value = 0.8;
+
+  delay.delayTime.value = 0.42;
+  feedback.gain.value = 0.28;
+
+  filter.connect(gain);
+  gain.connect(context.destination);
+  gain.connect(delay);
+  delay.connect(feedback);
+  feedback.connect(delay);
+  delay.connect(context.destination);
+
+  const oscillators = [110, 164.81, 220].map((frequency, index) => {
+    const oscillator = context.createOscillator();
+    const oscillatorGain = context.createGain();
+    const lfo = context.createOscillator();
+    const lfoGain = context.createGain();
+
+    oscillator.type = index === 1 ? "triangle" : "sine";
+    oscillator.frequency.value = frequency;
+    oscillator.detune.value = index === 2 ? -8 : index * 5;
+
+    oscillatorGain.gain.value = index === 0 ? 0.22 : 0.11;
+    lfo.frequency.value = 0.035 + index * 0.017;
+    lfoGain.gain.value = 5 + index * 2;
+
+    lfo.connect(lfoGain);
+    lfoGain.connect(oscillator.detune);
+    oscillator.connect(oscillatorGain);
+    oscillatorGain.connect(filter);
+
+    oscillator.start();
+    lfo.start();
+
+    return { oscillator, lfo };
+  });
+
+  return {
+    context,
+    gain,
+    stop: () => {
+      const now = context.currentTime;
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0001), now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+      window.setTimeout(() => {
+        oscillators.forEach(({ oscillator, lfo }) => {
+          oscillator.stop();
+          lfo.stop();
+        });
+        void context.close();
+      }, 650);
+    }
+  };
 }
 
 function IntroOverlay({ onStart }: { onStart: () => void }) {
