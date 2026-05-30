@@ -504,45 +504,61 @@ function RewardCard({ onReplay }: { onReplay: () => void }) {
   }
 
   return (
-    <div className="absolute inset-0 z-40 grid place-items-center bg-black/54 p-5 backdrop-blur-[2px]">
-      <section className="reward-card game-reward w-full max-w-[330px] p-5 text-center text-amber-50">
-        <div className="reward-crystal mx-auto" />
-        <div className="mt-4 text-xs font-semibold uppercase tracking-[0.22em] text-amber-100/75">
-          PixVerse Gift Code
-        </div>
-        <div className="mt-2 text-lg font-semibold">眠れる守護者が目覚めた</div>
-        <p className="mt-2 text-sm leading-6 text-amber-50/78">
-          ルーンの謎を解き明かした探求者へ、谷からの贈り物です。
-        </p>
-        <div className="mt-4 border border-amber-100/30 bg-amber-100/12 px-3 py-3 text-sm font-semibold tracking-[0.12em]">
-          {GIFT_CODE}
-        </div>
-        <button
-          type="button"
-          onClick={copyCode}
-          className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 border border-amber-100/45 bg-amber-200/20 text-sm font-semibold transition hover:bg-amber-200/30"
-        >
-          {copied ? <Check size={17} /> : <Copy size={17} />}
-          {copied ? "コピーしました" : "コードをコピー"}
-        </button>
-        <div className="mt-3 grid grid-cols-2 gap-2">
+    <div className="absolute inset-0 z-40 grid place-items-center bg-black/65 p-5 backdrop-blur-[4px]">
+      <section className="reward-card game-reward w-full max-w-[340px] p-6 text-center text-amber-50">
+        {/* Decorative Elements */}
+        <div className="reward-scanline" />
+        <div className="reward-glitch-border" />
+
+        <div className="reward-crystal mx-auto mb-6" />
+
+        <div className="relative z-10">
+          <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-sky-300/80">
+            Protocol: Reward Unlocked
+          </div>
+          <div className="mt-2 text-xl font-bold tracking-tight text-white">
+            眠れる守護者が目覚めた
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-sky-100/60">
+            ルーンの謎を解き明かした探求者へ、<br />
+            谷からの贈り物です。
+          </p>
+
+          <div className="reward-code-box mt-6 px-4 py-4">
+            <div className="text-[9px] uppercase tracking-widest text-sky-400/50 mb-1 text-left">Access Code</div>
+            <div className="text-lg font-mono font-bold tracking-[0.2em] text-sky-100">
+              {GIFT_CODE}
+            </div>
+          </div>
+
           <button
             type="button"
-            onClick={onReplay}
-            className="inline-flex h-11 items-center justify-center gap-2 border border-amber-100/32 bg-black/20 text-xs font-semibold text-amber-50 transition hover:bg-white/10"
+            onClick={copyCode}
+            className="reward-btn-primary mt-6 inline-flex h-12 w-full items-center justify-center gap-2 text-sm font-bold tracking-wider text-sky-50 transition active:scale-[0.98]"
           >
-            <RotateCcw size={15} />
-            もう一度遊ぶ
+            {copied ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
+            {copied ? "SUCCESS" : "COPY CODE"}
           </button>
-          <a
-            href="https://pixverse.ai/ja"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex h-11 items-center justify-center gap-2 border border-sky-100/35 bg-sky-200/12 text-xs font-semibold text-sky-50 transition hover:bg-sky-200/22"
-          >
-            <ExternalLink size={15} />
-            公式サイトへ
-          </a>
+
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={onReplay}
+              className="reward-btn-secondary inline-flex h-11 items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-white/70 transition hover:text-white active:scale-[0.98]"
+            >
+              <RotateCcw size={14} />
+              Replay
+            </button>
+            <a
+              href="https://pixverse.ai/ja"
+              target="_blank"
+              rel="noreferrer"
+              className="reward-btn-secondary inline-flex h-11 items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-white/70 transition hover:text-white active:scale-[0.98]"
+            >
+              <ExternalLink size={14} />
+              Portal
+            </a>
+          </div>
         </div>
       </section>
     </div>
