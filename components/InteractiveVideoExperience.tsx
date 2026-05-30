@@ -6,7 +6,7 @@ import {
   useDraggable,
   useDroppable
 } from "@dnd-kit/core";
-import { Check, Copy, ExternalLink, Play, RotateCcw, Volume2, VolumeX, Sparkles, Wind } from "lucide-react";
+import { Check, Copy, ExternalLink, Play, RotateCcw } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import {
   CHECKPOINTS,
@@ -21,15 +21,8 @@ const lightPattern = [0, 2, 4, 1, 3];
 const introCopy =
   "世界の果て、青き霧の谷。\n失われたルーンを解き、\n眠れる巨竜を呼び覚ませ。\n旅は、ここから始まる。";
 
-type BgmEngine = {
-  context: AudioContext;
-  gain: GainNode;
-  stop: () => void;
-};
-
 export function InteractiveVideoExperience() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const bgmRef = useRef<BgmEngine | null>(null);
   const phase = useGameState((state) => state.phase);
   const inventory = useGameState((state) => state.inventory);
   const completedCheckpoints = useGameState((state) => state.completedCheckpoints);
@@ -40,8 +33,6 @@ export function InteractiveVideoExperience() {
 
   const [needsStart, setNeedsStart] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
-  const [isBgmEnabled, setIsBgmEnabled] = useState(true);
-  const [bgmMode, setBgmMode] = useState<"mystic" | "cheerful">("cheerful");
 
   useEffect(() => {
     const video = videoRef.current;
@@ -152,7 +143,6 @@ export function InteractiveVideoExperience() {
     resetGame();
     setNeedsStart(false);
     setShowIntro(true);
-    stopBgm();
 
     const video = videoRef.current;
     if (video) {
@@ -164,47 +154,10 @@ export function InteractiveVideoExperience() {
   function handleIntroStart() {
     setShowIntro(false);
     setNeedsStart(false);
-    if (isBgmEnabled) {
-      startBgm(bgmMode);
-    }
 
     const video = videoRef.current;
     if (video) {
       void video.play().catch(() => setNeedsStart(true));
-    }
-  }
-
-  function startBgm(mode: "mystic" | "cheerful") {
-    if (bgmRef.current) {
-      stopBgm();
-    }
-
-    bgmRef.current = mode === "mystic" ? createMysticBgm() : createCheerfulBgm();
-  }
-
-  function stopBgm() {
-    bgmRef.current?.stop();
-    bgmRef.current = null;
-  }
-
-  function toggleBgm() {
-    if (isBgmEnabled) {
-      setIsBgmEnabled(false);
-      stopBgm();
-      return;
-    }
-
-    setIsBgmEnabled(true);
-    if (!showIntro) {
-      startBgm(bgmMode);
-    }
-  }
-
-  function switchBgmMode() {
-    const nextMode = bgmMode === "mystic" ? "cheerful" : "mystic";
-    setBgmMode(nextMode);
-    if (isBgmEnabled && !showIntro) {
-      startBgm(nextMode);
     }
   }
 
@@ -215,7 +168,6 @@ export function InteractiveVideoExperience() {
         className="absolute inset-0 h-full w-full object-cover"
         src="/videos/main.mp4"
         autoPlay={!showIntro}
-        muted
         playsInline
         preload="auto"
       />
@@ -235,32 +187,6 @@ export function InteractiveVideoExperience() {
       {phase === "REWARD_SHOWN" ? <RewardCard onReplay={handleReset} /> : null}
 
       {showIntro ? <IntroOverlay onStart={handleIntroStart} /> : null}
-
-      {!showIntro ? (
-        <div className="absolute right-3 top-[calc(env(safe-area-inset-top)+12px)] z-40 flex gap-3">
-          <button
-            type="button"
-            aria-label="switch bgm mode"
-            onClick={switchBgmMode}
-            className={`sound-toggle flex items-center gap-1.5 px-2 py-1 transition-all ${
-              bgmMode === "cheerful" ? "text-amber-300" : "text-sky-300"
-            }`}
-          >
-            {bgmMode === "cheerful" ? <Sparkles size={16} /> : <Wind size={16} />}
-            <span className="text-[10px] font-bold uppercase tracking-tighter">
-              {bgmMode === "cheerful" ? "Light" : "Mystic"}
-            </span>
-          </button>
-          <button
-            type="button"
-            aria-label={isBgmEnabled ? "bgm off" : "bgm on"}
-            onClick={toggleBgm}
-            className="sound-toggle p-1.5"
-          >
-            {isBgmEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-          </button>
-        </div>
-      ) : null}
 
       {needsStart ? (
         <button
@@ -282,202 +208,6 @@ export function InteractiveVideoExperience() {
   );
 }
 
-function createCheerfulBgm(): BgmEngine {
-  const audioWindow = window as typeof window & {
-    webkitAudioContext?: typeof AudioContext;
-  };
-  const AudioContextClass = audioWindow.AudioContext || audioWindow.webkitAudioContext;
-
-  if (!AudioContextClass) {
-    throw new Error("Web Audio API is not supported.");
-  }
-
-  const context = new AudioContextClass();
-  const mainGain = context.createGain();
-  const reverbGain = context.createGain();
-  const delay = context.createDelay();
-  const feedback = context.createGain();
-  const filter = context.createBiquadFilter();
-
-  mainGain.gain.setValueAtTime(0, context.currentTime);
-  mainGain.gain.linearRampToValueAtTime(0.08, context.currentTime + 2);
-
-  filter.type = "lowpass";
-  filter.frequency.value = 1500;
-  filter.Q.value = 1;
-
-  delay.delayTime.value = 0.5;
-  feedback.gain.value = 0.4;
-  reverbGain.gain.value = 0.3;
-
-  // Routing: Source -> Filter -> MainGain -> Destination
-  //                   |-> Delay -> Feedback -> Delay
-  //                   |-> Delay -> ReverbGain -> Destination
-  filter.connect(mainGain);
-  mainGain.connect(context.destination);
-
-  filter.connect(delay);
-  delay.connect(feedback);
-  feedback.connect(delay);
-  delay.connect(reverbGain);
-  reverbGain.connect(context.destination);
-
-  const scale = [523.25, 587.33, 659.25, 783.99, 880.0]; // C5, D5, E5, G5, A5 (Pentatonic)
-  const tempo = 0.6;
-
-  const scheduler = {
-    timerId: 0,
-    nextNoteTime: context.currentTime,
-    stop: false
-  };
-
-  function playNote(time: number) {
-    const osc = context.createOscillator();
-    const g = context.createGain();
-
-    osc.type = "sine";
-    const freq = scale[Math.floor(Math.random() * scale.length)];
-    osc.frequency.setValueAtTime(freq, time);
-
-    g.gain.setValueAtTime(0, time);
-    g.gain.exponentialRampToValueAtTime(0.15, time + 0.05);
-    g.gain.exponentialRampToValueAtTime(0.0001, time + 1.2);
-
-    osc.connect(g);
-    g.connect(filter);
-
-    osc.start(time);
-    osc.stop(time + 1.5);
-  }
-
-  function run() {
-    if (scheduler.stop) return;
-    while (scheduler.nextNoteTime < context.currentTime + 0.1) {
-      if (Math.random() > 0.3) {
-        playNote(scheduler.nextNoteTime);
-      }
-      scheduler.nextNoteTime += tempo;
-    }
-    scheduler.timerId = window.setTimeout(run, 50);
-  }
-
-  run();
-
-  // Background Pad
-  const pad1 = context.createOscillator();
-  const pad2 = context.createOscillator();
-  const padGain = context.createGain();
-
-  pad1.type = "triangle";
-  pad1.frequency.value = 130.81; // C3
-  pad2.type = "triangle";
-  pad2.frequency.value = 196.0; // G3
-  pad2.detune.value = 10;
-
-  padGain.gain.value = 0.02;
-
-  pad1.connect(padGain);
-  pad2.connect(padGain);
-  padGain.connect(filter);
-
-  pad1.start();
-  pad2.start();
-
-  return {
-    context,
-    gain: mainGain,
-    stop: () => {
-      scheduler.stop = true;
-      window.clearTimeout(scheduler.timerId);
-      const now = context.currentTime;
-      mainGain.gain.cancelScheduledValues(now);
-      mainGain.gain.setValueAtTime(mainGain.gain.value, now);
-      mainGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5);
-      window.setTimeout(() => {
-        pad1.stop();
-        pad2.stop();
-        void context.close();
-      }, 1600);
-    }
-  };
-}
-
-function createMysticBgm(): BgmEngine {
-  const audioWindow = window as typeof window & {
-    webkitAudioContext?: typeof AudioContext;
-  };
-  const AudioContextClass = audioWindow.AudioContext || audioWindow.webkitAudioContext;
-
-  if (!AudioContextClass) {
-    throw new Error("Web Audio API is not supported.");
-  }
-
-  const context = new AudioContextClass();
-  const mainGain = context.createGain();
-  const filter = context.createBiquadFilter();
-
-  mainGain.gain.setValueAtTime(0, context.currentTime);
-  mainGain.gain.linearRampToValueAtTime(0.05, context.currentTime + 3);
-
-  filter.type = "lowpass";
-  filter.frequency.value = 400;
-  filter.Q.value = 5;
-
-  filter.connect(mainGain);
-  mainGain.connect(context.destination);
-
-  // Sweep filter frequency for movement
-  const lfo = context.createOscillator();
-  const lfoGain = context.createGain();
-  lfo.frequency.value = 0.1;
-  lfoGain.gain.value = 200;
-  lfo.connect(lfoGain);
-  lfoGain.connect(filter.frequency);
-  lfo.start();
-
-  const frequencies = [65.41, 98.0, 130.81, 164.81]; // C2, G2, C3, E3
-  const oscillators = frequencies.map((f, i) => {
-    const osc = context.createOscillator();
-    const g = context.createGain();
-    osc.type = "sine";
-    osc.frequency.value = f;
-    osc.detune.value = Math.random() * 20 - 10;
-
-    // Slowly modulate volume of each oscillator
-    const vLfo = context.createOscillator();
-    const vG = context.createGain();
-    vLfo.frequency.value = 0.05 + Math.random() * 0.05;
-    vG.gain.value = 0.02;
-    vLfo.connect(vG);
-    vG.connect(g.gain);
-    vLfo.start();
-
-    g.gain.value = 0.03;
-    osc.connect(g);
-    g.connect(filter);
-    osc.start();
-    return { osc, vLfo };
-  });
-
-  return {
-    context,
-    gain: mainGain,
-    stop: () => {
-      const now = context.currentTime;
-      mainGain.gain.cancelScheduledValues(now);
-      mainGain.gain.setValueAtTime(mainGain.gain.value, now);
-      mainGain.gain.exponentialRampToValueAtTime(0.0001, now + 2);
-      window.setTimeout(() => {
-        oscillators.forEach(o => {
-          o.osc.stop();
-          o.vLfo.stop();
-        });
-        lfo.stop();
-        void context.close();
-      }, 2100);
-    }
-  };
-}
 
 function IntroOverlay({ onStart }: { onStart: () => void }) {
   const [visibleCount, setVisibleCount] = useState(0);
