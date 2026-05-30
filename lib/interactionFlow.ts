@@ -10,7 +10,7 @@ export const GIFT_CODE = "PIXVERSE-DRAGON-2026";
 export const collectHotspots = [
   {
     id: "grass_1",
-    label: "荧光草一",
+    label: "glowing grass 1",
     x: 10,
     y: 62,
     width: 22,
@@ -18,7 +18,7 @@ export const collectHotspots = [
   },
   {
     id: "grass_2",
-    label: "荧光草二",
+    label: "glowing grass 2",
     x: 39,
     y: 67,
     width: 21,
@@ -26,7 +26,7 @@ export const collectHotspots = [
   },
   {
     id: "grass_3",
-    label: "荧光草三",
+    label: "glowing grass 3",
     x: 68,
     y: 60,
     width: 22,
@@ -36,7 +36,7 @@ export const collectHotspots = [
 
 export const dragonEyeSocket = {
   id: "dragon-eye-socket",
-  label: "龙眼槽位",
+  label: "dragon eye socket",
   x: 39,
   y: 31,
   width: 22,

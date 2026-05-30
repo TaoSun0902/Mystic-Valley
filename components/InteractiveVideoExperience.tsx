@@ -6,8 +6,8 @@ import {
   useDraggable,
   useDroppable
 } from "@dnd-kit/core";
-import { Check, Copy, Play } from "lucide-react";
-import { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import { Check, Copy, ExternalLink, Play, RotateCcw } from "lucide-react";
+import { CSSProperties, useEffect, useRef, useState } from "react";
 import {
   CHECKPOINTS,
   GIFT_CODE,
@@ -15,9 +15,11 @@ import {
   dragonEyeSocket
 } from "@/lib/interactionFlow";
 import { useGameState } from "@/store/gameStore";
-import { GameHud } from "@/components/GameHud";
 
 const grassIds = ["grass_1", "grass_2", "grass_3"];
+const lightPattern = [0, 2, 4, 1, 3];
+const introCopy =
+  "世界の果て、青き霧の谷。\n失われたルーンを解き、\n眠れる巨竜を呼び覚ませ。\n旅は、ここから始まる。";
 
 export function InteractiveVideoExperience() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -30,7 +32,7 @@ export function InteractiveVideoExperience() {
   const setPhase = useGameState((state) => state.setPhase);
 
   const [needsStart, setNeedsStart] = useState(false);
-  const [whiteFlash, setWhiteFlash] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -39,11 +41,16 @@ export function InteractiveVideoExperience() {
       return;
     }
 
+    if (showIntro) {
+      video.pause();
+      return;
+    }
+
     const playPromise = video.play();
     if (playPromise) {
       void playPromise.catch(() => setNeedsStart(true));
     }
-  }, []);
+  }, [showIntro]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -53,24 +60,34 @@ export function InteractiveVideoExperience() {
     }
 
     const handleTimeUpdate = () => {
-      const time = video.currentTime;
-
-      if (time >= CHECKPOINTS.collect && !completedCheckpoints.includes("collect")) {
+      if (
+        video.currentTime >= CHECKPOINTS.collect &&
+        !completedCheckpoints.includes("collect")
+      ) {
         video.pause();
         setPhase("COLLECT_PAUSED");
       }
 
-      if (time >= CHECKPOINTS.alchemy && !completedCheckpoints.includes("alchemy")) {
+      if (
+        video.currentTime >= CHECKPOINTS.alchemy &&
+        !completedCheckpoints.includes("alchemy")
+      ) {
         video.pause();
         setPhase("ALCHEMY_PAUSED");
       }
 
-      if (time >= CHECKPOINTS.puzzle && !completedCheckpoints.includes("puzzle")) {
+      if (
+        video.currentTime >= CHECKPOINTS.puzzle &&
+        !completedCheckpoints.includes("puzzle")
+      ) {
         video.pause();
         setPhase("PUZZLE_PAUSED");
       }
 
-      if (time >= CHECKPOINTS.reward && !completedCheckpoints.includes("reward")) {
+      if (
+        video.currentTime >= CHECKPOINTS.reward &&
+        !completedCheckpoints.includes("reward")
+      ) {
         video.pause();
         completeCheckpoint("reward");
         setPhase("REWARD_SHOWN");
@@ -103,9 +120,7 @@ export function InteractiveVideoExperience() {
   function handleCollect(itemId: string) {
     addItem(itemId);
 
-    const nextInventory = inventory.includes(itemId)
-      ? inventory
-      : [...inventory, itemId];
+    const nextInventory = inventory.includes(itemId) ? inventory : [...inventory, itemId];
     const collectedGrassCount = nextInventory.filter((id) => grassIds.includes(id)).length;
 
     if (collectedGrassCount >= 3) {
@@ -119,24 +134,29 @@ export function InteractiveVideoExperience() {
     playNext("MECHANISM_PLAYING");
   }
 
-  function handleRuneSuccess() {
-    setWhiteFlash(true);
+  function handleLightSigilComplete() {
     completeCheckpoint("puzzle");
-
-    window.setTimeout(() => {
-      setWhiteFlash(false);
-      playNext("CLIMAX_PLAYING");
-    }, 300);
+    playNext("CLIMAX_PLAYING");
   }
 
   function handleReset() {
     resetGame();
     setNeedsStart(false);
-    setWhiteFlash(false);
+    setShowIntro(true);
 
     const video = videoRef.current;
     if (video) {
       video.currentTime = 0;
+      video.pause();
+    }
+  }
+
+  function handleIntroStart() {
+    setShowIntro(false);
+    setNeedsStart(false);
+
+    const video = videoRef.current;
+    if (video) {
       void video.play().catch(() => setNeedsStart(true));
     }
   }
@@ -145,17 +165,13 @@ export function InteractiveVideoExperience() {
     <>
       <video
         ref={videoRef}
-        className={`absolute inset-0 h-full w-full object-cover ${
-          phase === "MECHANISM_PLAYING" ? "screen-shake" : ""
-        }`}
+        className="absolute inset-0 h-full w-full object-cover"
         src="/videos/main.mp4"
-        autoPlay
+        autoPlay={!showIntro}
         muted
         playsInline
         preload="auto"
       />
-
-      <GameHud onReset={handleReset} />
 
       {phase === "COLLECT_PAUSED" ? (
         <CollectLayer inventory={inventory} onCollect={handleCollect} />
@@ -166,20 +182,18 @@ export function InteractiveVideoExperience() {
       ) : null}
 
       {phase === "PUZZLE_PAUSED" ? (
-        <RuneConsole onSuccess={handleRuneSuccess} />
+        <LightSigilPuzzle onComplete={handleLightSigilComplete} />
       ) : null}
 
-      {phase === "REWARD_SHOWN" ? <RewardCard /> : null}
+      {phase === "REWARD_SHOWN" ? <RewardCard onReplay={handleReset} /> : null}
 
-      <div
-        className={`pointer-events-none absolute inset-0 z-40 bg-white transition-opacity duration-150 ${
-          whiteFlash ? "opacity-95" : "opacity-0"
-        }`}
-      />
+      {showIntro ? <IntroOverlay onStart={handleIntroStart} /> : null}
 
       {needsStart ? (
         <button
           type="button"
+          aria-label="play"
+          title="play"
           onClick={() => {
             setNeedsStart(false);
             void videoRef.current?.play().catch(() => setNeedsStart(true));
@@ -195,6 +209,43 @@ export function InteractiveVideoExperience() {
   );
 }
 
+function IntroOverlay({ onStart }: { onStart: () => void }) {
+  const [visibleCount, setVisibleCount] = useState(0);
+  const isComplete = visibleCount >= introCopy.length;
+
+  useEffect(() => {
+    if (isComplete) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setVisibleCount((count) => Math.min(count + 1, introCopy.length));
+    }, 42);
+
+    return () => window.clearInterval(timer);
+  }, [isComplete]);
+
+  return (
+    <div className="intro-overlay absolute inset-0 z-50 flex items-end">
+      <div className="intro-copy w-full px-6 pb-[calc(env(safe-area-inset-bottom)+48px)] pt-24">
+        <div className="intro-title">Mystic Valley</div>
+        <p className="intro-typewriter" aria-live="polite">
+          {introCopy.slice(0, visibleCount)}
+          <span className="intro-caret" />
+        </p>
+        <button
+          type="button"
+          onClick={onStart}
+          className={`intro-start ${isComplete ? "opacity-100" : "opacity-0"}`}
+          disabled={!isComplete}
+        >
+          冒険を始める
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function CollectLayer({
   inventory,
   onCollect
@@ -206,6 +257,7 @@ function CollectLayer({
 
   return (
     <>
+      <HintPill>光る草を集める</HintPill>
       <div className="absolute inset-0 z-20">
         {collectHotspots.map((hotspot, index) => {
           const collected = inventory.includes(hotspot.id);
@@ -229,8 +281,6 @@ function CollectLayer({
               }}
             >
               <span className="game-icon game-icon-grass" />
-              <span className="tap-cue">TAP</span>
-              <span className="sr-only">{hotspot.label}</span>
             </button>
           );
         })}
@@ -240,113 +290,51 @@ function CollectLayer({
   );
 }
 
-function InventoryDock({ items }: { items: string[] }) {
-  return (
-    <div className="game-dock pointer-events-none absolute inset-x-3 bottom-3 z-30 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-xs uppercase tracking-[0.2em] text-amber-100/70">アイテムポーチ</div>
-        <div className="text-xs font-semibold text-lime-100">{items.length}/3</div>
-      </div>
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        {grassIds.map((id) => (
-          <div
-            key={id}
-            className={`game-slot ${items.includes(id) ? "game-slot-filled" : ""}`}
-          >
-            {items.includes(id) ? <span className="game-icon game-icon-grass" /> : null}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function AlchemyLayer({ onComplete }: { onComplete: () => void }) {
   const inventory = useGameState((state) => state.inventory);
   const removeItem = useGameState((state) => state.removeItem);
   const insertDragonEye = useGameState((state) => state.insertDragonEye);
   const [offeredGrass, setOfferedGrass] = useState<string[]>([]);
-  const [eyeGlowKey, setEyeGlowKey] = useState(0);
 
-  const availableGrass = useMemo(
-    () => inventory.filter((id) => grassIds.includes(id)),
-    [inventory]
-  );
+  const availableGrass = inventory.filter((id) => grassIds.includes(id));
 
   function handleDragEnd(event: DragEndEvent) {
     const itemId = String(event.active.id);
 
-    if (event.over?.id === dragonEyeSocket.id && grassIds.includes(itemId)) {
-      if (offeredGrass.includes(itemId)) {
-        return;
-      }
+    if (event.over?.id !== dragonEyeSocket.id || !grassIds.includes(itemId)) {
+      return;
+    }
 
-      const nextItems = [...offeredGrass, itemId];
-      setOfferedGrass(nextItems);
-      removeItem(itemId);
-      setEyeGlowKey((value) => value + 1);
+    if (offeredGrass.includes(itemId)) {
+      return;
+    }
 
-      if (nextItems.length === 3) {
-        insertDragonEye();
-        window.setTimeout(onComplete, 620);
-      }
+    const nextItems = [...offeredGrass, itemId];
+    setOfferedGrass(nextItems);
+    removeItem(itemId);
+
+    if (nextItems.length === 3) {
+      insertDragonEye();
+      window.setTimeout(onComplete, 520);
     }
   }
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <DragonEyeSocket active glowKey={eyeGlowKey} progress={offeredGrass.length} />
-      <div className="game-dock pointer-events-auto absolute inset-x-3 bottom-3 z-30 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] text-cyan-50">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-100/70">
-              Alchemy
-            </div>
-            <div className="mt-1 text-sm font-semibold">
-              光る草を竜の瞳へ
-            </div>
-          </div>
-          <div className="text-xs font-semibold text-cyan-100">{offeredGrass.length}/3</div>
-        </div>
-        <AlchemyRitualMeter count={offeredGrass.length} />
-        <div className="mt-3 flex min-h-14 flex-wrap gap-2">
-          {availableGrass.map((id) => (
-            <DraggableToken key={id} id={id} label="光る草" tone="grass" />
-          ))}
-        </div>
-      </div>
+      <HintPill>草を瞳へ</HintPill>
+      <HiddenDragonEyeDropZone />
+      <InventoryDock items={availableGrass} draggable />
     </DndContext>
   );
 }
 
-function AlchemyRitualMeter({ count }: { count: number }) {
-  return (
-    <div className="alchemy-drop mt-3 min-h-32">
-      <div className="alchemy-sigil" />
-      <div className="relative z-10 text-center text-sm font-semibold text-cyan-50">
-        {count < 3 ? `竜の瞳へ捧げる ${count}/3` : "竜の瞳が目覚める"}
-      </div>
-    </div>
-  );
-}
-
-function DragonEyeSocket({
-  active,
-  glowKey,
-  progress
-}: {
-  active: boolean;
-  glowKey: number;
-  progress: number;
-}) {
-  const { isOver, setNodeRef } = useDroppable({ id: dragonEyeSocket.id });
+function HiddenDragonEyeDropZone() {
+  const { setNodeRef } = useDroppable({ id: dragonEyeSocket.id });
 
   return (
     <div
       ref={setNodeRef}
-      className={`dragon-socket absolute z-20 transition ${
-        active ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-      } ${isOver ? "dragon-socket-active" : ""}`}
+      className="dragon-eye-drop-zone absolute z-20"
       style={{
         left: `${dragonEyeSocket.x}%`,
         top: `${dragonEyeSocket.y}%`,
@@ -354,23 +342,120 @@ function DragonEyeSocket({
         height: `${dragonEyeSocket.height}%`
       }}
       aria-label={dragonEyeSocket.label}
-    >
-      <span className="game-icon game-icon-eye" />
-      {glowKey > 0 ? <span key={glowKey} className="dragon-eye-burst" /> : null}
-      <span className="dragon-socket-count">{progress}/3</span>
+    />
+  );
+}
+
+function LightSigilPuzzle({ onComplete }: { onComplete: () => void }) {
+  const [step, setStep] = useState(0);
+  const [activeNode, setActiveNode] = useState<number | null>(null);
+  const [litNodes, setLitNodes] = useState<number[]>([]);
+  const [isSolved, setIsSolved] = useState(false);
+
+  useEffect(() => {
+    const timers = lightPattern.map((node, index) =>
+      window.setTimeout(() => {
+        setActiveNode(node);
+        window.setTimeout(() => setActiveNode(null), 260);
+      }, 420 + index * 360)
+    );
+
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, []);
+
+  function resetPattern() {
+    setStep(0);
+    setLitNodes([]);
+    setActiveNode(null);
+  }
+
+  function handleNodePress(node: number) {
+    if (isSolved) {
+      return;
+    }
+
+    if (node !== lightPattern[step]) {
+      setActiveNode(node);
+      window.setTimeout(resetPattern, 260);
+      return;
+    }
+
+    const nextStep = step + 1;
+    const nextLitNodes = [...litNodes, node];
+    setStep(nextStep);
+    setLitNodes(nextLitNodes);
+    setActiveNode(node);
+    window.setTimeout(() => setActiveNode(null), 220);
+
+    if (nextStep === lightPattern.length) {
+      setIsSolved(true);
+      window.setTimeout(onComplete, 420);
+    }
+  }
+
+  return (
+    <div className="light-sigil-layer pointer-events-auto absolute inset-0 z-30 grid place-items-center">
+      <HintPill>光の順をなぞる</HintPill>
+      <div className={`hand-sigil ${isSolved ? "hand-sigil-solved" : ""}`}>
+        <div className="hand-sigil-core" />
+        <div className="hand-sigil-line hand-sigil-line-1" />
+        <div className="hand-sigil-line hand-sigil-line-2" />
+        <div className="hand-sigil-line hand-sigil-line-3" />
+        {lightPattern.map((_, index) => (
+          <button
+            key={index}
+            type="button"
+            aria-label={`light node ${index + 1}`}
+            onClick={() => handleNodePress(index)}
+            className={`light-node light-node-${index + 1} ${
+              activeNode === index || litNodes.includes(index) ? "light-node-lit" : ""
+            }`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
 
-function DraggableToken({
-  id,
-  label,
-  tone
+function HintPill({ children }: { children: string }) {
+  return (
+    <div className="hint-pill pointer-events-none absolute left-1/2 top-[calc(env(safe-area-inset-top)+18px)] z-30 -translate-x-1/2">
+      {children}
+    </div>
+  );
+}
+
+function InventoryDock({
+  items,
+  draggable = false
 }: {
-  id: string;
-  label: string;
-  tone: "grass" | "eye";
+  items: string[];
+  draggable?: boolean;
 }) {
+  return (
+    <div className="game-dock pointer-events-none absolute inset-x-3 bottom-3 z-30 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
+      <div className="grid grid-cols-3 gap-2">
+        {grassIds.map((id) => (
+          <div
+            key={id}
+            className={`game-slot ${items.includes(id) ? "game-slot-filled" : ""}`}
+            aria-label={items.includes(id) ? "glowing grass" : "empty slot"}
+          >
+            {items.includes(id) ? (
+              draggable ? (
+                <DraggableGrass id={id} />
+              ) : (
+                <span className="game-icon game-icon-grass" />
+              )
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DraggableGrass({ id }: { id: string }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id
   });
@@ -382,66 +467,18 @@ function DraggableToken({
     <button
       ref={setNodeRef}
       type="button"
+      aria-label="glowing grass"
       style={style}
-      className={`game-token ${tone === "eye" ? "game-token-eye" : "game-token-grass"} ${
-        isDragging ? "scale-105 opacity-80" : ""
-      }`}
+      className={`game-grass-token ${isDragging ? "scale-110 opacity-80" : ""}`}
       {...listeners}
       {...attributes}
     >
-      <span className={`game-icon ${tone === "eye" ? "game-icon-eye" : "game-icon-grass"}`} />
-      <span>{label}</span>
+      <span className="game-icon game-icon-grass" />
     </button>
   );
 }
 
-function RuneConsole({ onSuccess }: { onSuccess: () => void }) {
-  const [code, setCode] = useState("");
-  const [hasError, setHasError] = useState(false);
-
-  function submit() {
-    if (code.trim().toUpperCase() === "DRAGON") {
-      setHasError(false);
-      onSuccess();
-      return;
-    }
-
-    setHasError(true);
-    window.setTimeout(() => setHasError(false), 420);
-  }
-
-  return (
-    <div className="rune-panel pointer-events-auto absolute inset-x-3 bottom-3 z-30 p-4 pb-[calc(env(safe-area-inset-bottom)+14px)] text-sky-50">
-      <div className="rune-console-art" />
-      <div className="relative z-10 text-[11px] uppercase tracking-[0.2em] text-sky-100/70">
-        Rune Console
-      </div>
-      <div className="relative z-10 mt-1 text-sm font-semibold">竜語コードを入力</div>
-      <div className={`relative z-10 mt-3 grid gap-3 ${hasError ? "ui-shake" : ""}`}>
-        <input
-          value={code}
-          onChange={(event) => setCode(event.target.value.toUpperCase().slice(0, 6))}
-          placeholder="DRAGON"
-          inputMode="text"
-          autoCapitalize="characters"
-          className="h-12 border border-sky-100/40 bg-sky-100/10 px-4 text-center text-lg font-semibold uppercase tracking-[0.24em] text-sky-50 outline-none placeholder:text-sky-100/30 focus:border-sky-100"
-        />
-        <button
-          type="button"
-          onClick={submit}
-          className="h-12 border border-sky-100/45 bg-sky-200/18 text-sm font-semibold uppercase tracking-[0.16em] text-sky-50 transition hover:bg-sky-200/28"
-        >
-          魔力を注入
-        </button>
-        <div className="min-h-4 text-center text-xs text-sky-100/75">
-          {hasError ? "コードが違います。もう一度試してください" : " "}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RewardCard() {
+function RewardCard({ onReplay }: { onReplay: () => void }) {
   const [copied, setCopied] = useState(false);
 
   async function copyCode() {
@@ -451,24 +488,46 @@ function RewardCard() {
   }
 
   return (
-    <div className="absolute inset-0 z-30 grid place-items-center bg-black/48 p-5 backdrop-blur-[2px]">
+    <div className="absolute inset-0 z-40 grid place-items-center bg-black/54 p-5 backdrop-blur-[2px]">
       <section className="reward-card game-reward w-full max-w-[330px] p-5 text-center text-amber-50">
         <div className="reward-crystal mx-auto" />
-        <div className="mt-4 text-xs uppercase tracking-[0.22em] text-amber-100/75">
+        <div className="mt-4 text-xs font-semibold uppercase tracking-[0.22em] text-amber-100/75">
           PixVerse Gift Code
         </div>
-        <div className="mt-2 text-lg font-semibold">報酬を獲得しました</div>
-        <div className="mt-3 border border-amber-100/30 bg-amber-100/12 px-3 py-3 text-sm font-semibold tracking-[0.12em]">
+        <div className="mt-2 text-lg font-semibold">眠れる守護者が目覚めた</div>
+        <p className="mt-2 text-sm leading-6 text-amber-50/78">
+          ルーンの謎を解き明かした探求者へ、谷からの贈り物です。
+        </p>
+        <div className="mt-4 border border-amber-100/30 bg-amber-100/12 px-3 py-3 text-sm font-semibold tracking-[0.12em]">
           {GIFT_CODE}
         </div>
         <button
           type="button"
           onClick={copyCode}
-          className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 border border-amber-100/45 bg-amber-200/20 text-sm font-semibold uppercase tracking-[0.14em] transition hover:bg-amber-200/30"
+          className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 border border-amber-100/45 bg-amber-200/20 text-sm font-semibold transition hover:bg-amber-200/30"
         >
           {copied ? <Check size={17} /> : <Copy size={17} />}
           {copied ? "コピーしました" : "コードをコピー"}
         </button>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={onReplay}
+            className="inline-flex h-11 items-center justify-center gap-2 border border-amber-100/32 bg-black/20 text-xs font-semibold text-amber-50 transition hover:bg-white/10"
+          >
+            <RotateCcw size={15} />
+            もう一度遊ぶ
+          </button>
+          <a
+            href="https://pixverse.ai/ja"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex h-11 items-center justify-center gap-2 border border-sky-100/35 bg-sky-200/12 text-xs font-semibold text-sky-50 transition hover:bg-sky-200/22"
+          >
+            <ExternalLink size={15} />
+            公式サイトへ
+          </a>
+        </div>
       </section>
     </div>
   );
