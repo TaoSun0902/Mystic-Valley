@@ -6,7 +6,7 @@ import {
   useDraggable,
   useDroppable
 } from "@dnd-kit/core";
-import { Check, Copy, ExternalLink, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { Check, Copy, ExternalLink, Play, RotateCcw, Volume2, VolumeX, Sparkles, Wind } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import {
   CHECKPOINTS,
@@ -41,6 +41,7 @@ export function InteractiveVideoExperience() {
   const [needsStart, setNeedsStart] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [isBgmEnabled, setIsBgmEnabled] = useState(true);
+  const [bgmMode, setBgmMode] = useState<"mystic" | "cheerful">("cheerful");
 
   useEffect(() => {
     const video = videoRef.current;
@@ -164,7 +165,7 @@ export function InteractiveVideoExperience() {
     setShowIntro(false);
     setNeedsStart(false);
     if (isBgmEnabled) {
-      startBgm();
+      startBgm(bgmMode);
     }
 
     const video = videoRef.current;
@@ -173,13 +174,12 @@ export function InteractiveVideoExperience() {
     }
   }
 
-  function startBgm() {
+  function startBgm(mode: "mystic" | "cheerful") {
     if (bgmRef.current) {
-      void bgmRef.current.context.resume();
-      return;
+      stopBgm();
     }
 
-    bgmRef.current = createMysticBgm();
+    bgmRef.current = mode === "mystic" ? createMysticBgm() : createCheerfulBgm();
   }
 
   function stopBgm() {
@@ -196,7 +196,15 @@ export function InteractiveVideoExperience() {
 
     setIsBgmEnabled(true);
     if (!showIntro) {
-      startBgm();
+      startBgm(bgmMode);
+    }
+  }
+
+  function switchBgmMode() {
+    const nextMode = bgmMode === "mystic" ? "cheerful" : "mystic";
+    setBgmMode(nextMode);
+    if (isBgmEnabled && !showIntro) {
+      startBgm(nextMode);
     }
   }
 
@@ -229,14 +237,29 @@ export function InteractiveVideoExperience() {
       {showIntro ? <IntroOverlay onStart={handleIntroStart} /> : null}
 
       {!showIntro ? (
-        <button
-          type="button"
-          aria-label={isBgmEnabled ? "bgm off" : "bgm on"}
-          onClick={toggleBgm}
-          className="sound-toggle absolute right-3 top-[calc(env(safe-area-inset-top)+12px)] z-40"
-        >
-          {isBgmEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-        </button>
+        <div className="absolute right-3 top-[calc(env(safe-area-inset-top)+12px)] z-40 flex gap-3">
+          <button
+            type="button"
+            aria-label="switch bgm mode"
+            onClick={switchBgmMode}
+            className={`sound-toggle flex items-center gap-1.5 px-2 py-1 transition-all ${
+              bgmMode === "cheerful" ? "text-amber-300" : "text-sky-300"
+            }`}
+          >
+            {bgmMode === "cheerful" ? <Sparkles size={16} /> : <Wind size={16} />}
+            <span className="text-[10px] font-bold uppercase tracking-tighter">
+              {bgmMode === "cheerful" ? "Light" : "Mystic"}
+            </span>
+          </button>
+          <button
+            type="button"
+            aria-label={isBgmEnabled ? "bgm off" : "bgm on"}
+            onClick={toggleBgm}
+            className="sound-toggle p-1.5"
+          >
+            {isBgmEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          </button>
+        </div>
       ) : null}
 
       {needsStart ? (
@@ -259,6 +282,126 @@ export function InteractiveVideoExperience() {
   );
 }
 
+function createCheerfulBgm(): BgmEngine {
+  const audioWindow = window as typeof window & {
+    webkitAudioContext?: typeof AudioContext;
+  };
+  const AudioContextClass = audioWindow.AudioContext || audioWindow.webkitAudioContext;
+
+  if (!AudioContextClass) {
+    throw new Error("Web Audio API is not supported.");
+  }
+
+  const context = new AudioContextClass();
+  const mainGain = context.createGain();
+  const reverbGain = context.createGain();
+  const delay = context.createDelay();
+  const feedback = context.createGain();
+  const filter = context.createBiquadFilter();
+
+  mainGain.gain.setValueAtTime(0, context.currentTime);
+  mainGain.gain.linearRampToValueAtTime(0.08, context.currentTime + 2);
+
+  filter.type = "lowpass";
+  filter.frequency.value = 1500;
+  filter.Q.value = 1;
+
+  delay.delayTime.value = 0.5;
+  feedback.gain.value = 0.4;
+  reverbGain.gain.value = 0.3;
+
+  // Routing: Source -> Filter -> MainGain -> Destination
+  //                   |-> Delay -> Feedback -> Delay
+  //                   |-> Delay -> ReverbGain -> Destination
+  filter.connect(mainGain);
+  mainGain.connect(context.destination);
+
+  filter.connect(delay);
+  delay.connect(feedback);
+  feedback.connect(delay);
+  delay.connect(reverbGain);
+  reverbGain.connect(context.destination);
+
+  const scale = [523.25, 587.33, 659.25, 783.99, 880.0]; // C5, D5, E5, G5, A5 (Pentatonic)
+  const tempo = 0.6;
+
+  const scheduler = {
+    timerId: 0,
+    nextNoteTime: context.currentTime,
+    stop: false
+  };
+
+  function playNote(time: number) {
+    const osc = context.createOscillator();
+    const g = context.createGain();
+
+    osc.type = "sine";
+    const freq = scale[Math.floor(Math.random() * scale.length)];
+    osc.frequency.setValueAtTime(freq, time);
+
+    g.gain.setValueAtTime(0, time);
+    g.gain.exponentialRampToValueAtTime(0.15, time + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, time + 1.2);
+
+    osc.connect(g);
+    g.connect(filter);
+
+    osc.start(time);
+    osc.stop(time + 1.5);
+  }
+
+  function run() {
+    if (scheduler.stop) return;
+    while (scheduler.nextNoteTime < context.currentTime + 0.1) {
+      if (Math.random() > 0.3) {
+        playNote(scheduler.nextNoteTime);
+      }
+      scheduler.nextNoteTime += tempo;
+    }
+    scheduler.timerId = window.setTimeout(run, 50);
+  }
+
+  run();
+
+  // Background Pad
+  const pad1 = context.createOscillator();
+  const pad2 = context.createOscillator();
+  const padGain = context.createGain();
+
+  pad1.type = "triangle";
+  pad1.frequency.value = 130.81; // C3
+  pad2.type = "triangle";
+  pad2.frequency.value = 196.0; // G3
+  pad2.detune.value = 10;
+
+  padGain.gain.value = 0.02;
+
+  pad1.connect(padGain);
+  pad2.connect(padGain);
+  padGain.connect(filter);
+
+  pad1.start();
+  pad2.start();
+
+  return {
+    context,
+    gain: mainGain,
+    stop: () => {
+      scheduler.stop = true;
+      window.clearTimeout(scheduler.timerId);
+      const now = context.currentTime;
+      mainGain.gain.cancelScheduledValues(now);
+      mainGain.gain.setValueAtTime(mainGain.gain.value, now);
+      mainGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5);
+      window.setTimeout(() => {
+        pad1.stop();
+        pad2.stop();
+        void context.close();
+      }, 1600);
+    }
+  };
+}
+
 function createMysticBgm(): BgmEngine {
   const audioWindow = window as typeof window & {
     webkitAudioContext?: typeof AudioContext;
@@ -270,68 +413,68 @@ function createMysticBgm(): BgmEngine {
   }
 
   const context = new AudioContextClass();
-  const gain = context.createGain();
+  const mainGain = context.createGain();
   const filter = context.createBiquadFilter();
-  const delay = context.createDelay(2.4);
-  const feedback = context.createGain();
 
-  gain.gain.setValueAtTime(0.0001, context.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.045, context.currentTime + 1.6);
+  mainGain.gain.setValueAtTime(0, context.currentTime);
+  mainGain.gain.linearRampToValueAtTime(0.05, context.currentTime + 3);
 
   filter.type = "lowpass";
-  filter.frequency.value = 820;
-  filter.Q.value = 0.8;
+  filter.frequency.value = 400;
+  filter.Q.value = 5;
 
-  delay.delayTime.value = 0.42;
-  feedback.gain.value = 0.28;
+  filter.connect(mainGain);
+  mainGain.connect(context.destination);
 
-  filter.connect(gain);
-  gain.connect(context.destination);
-  gain.connect(delay);
-  delay.connect(feedback);
-  feedback.connect(delay);
-  delay.connect(context.destination);
+  // Sweep filter frequency for movement
+  const lfo = context.createOscillator();
+  const lfoGain = context.createGain();
+  lfo.frequency.value = 0.1;
+  lfoGain.gain.value = 200;
+  lfo.connect(lfoGain);
+  lfoGain.connect(filter.frequency);
+  lfo.start();
 
-  const oscillators = [110, 164.81, 220].map((frequency, index) => {
-    const oscillator = context.createOscillator();
-    const oscillatorGain = context.createGain();
-    const lfo = context.createOscillator();
-    const lfoGain = context.createGain();
+  const frequencies = [65.41, 98.0, 130.81, 164.81]; // C2, G2, C3, E3
+  const oscillators = frequencies.map((f, i) => {
+    const osc = context.createOscillator();
+    const g = context.createGain();
+    osc.type = "sine";
+    osc.frequency.value = f;
+    osc.detune.value = Math.random() * 20 - 10;
 
-    oscillator.type = index === 1 ? "triangle" : "sine";
-    oscillator.frequency.value = frequency;
-    oscillator.detune.value = index === 2 ? -8 : index * 5;
+    // Slowly modulate volume of each oscillator
+    const vLfo = context.createOscillator();
+    const vG = context.createGain();
+    vLfo.frequency.value = 0.05 + Math.random() * 0.05;
+    vG.gain.value = 0.02;
+    vLfo.connect(vG);
+    vG.connect(g.gain);
+    vLfo.start();
 
-    oscillatorGain.gain.value = index === 0 ? 0.22 : 0.11;
-    lfo.frequency.value = 0.035 + index * 0.017;
-    lfoGain.gain.value = 5 + index * 2;
-
-    lfo.connect(lfoGain);
-    lfoGain.connect(oscillator.detune);
-    oscillator.connect(oscillatorGain);
-    oscillatorGain.connect(filter);
-
-    oscillator.start();
-    lfo.start();
-
-    return { oscillator, lfo };
+    g.gain.value = 0.03;
+    osc.connect(g);
+    g.connect(filter);
+    osc.start();
+    return { osc, vLfo };
   });
 
   return {
     context,
-    gain,
+    gain: mainGain,
     stop: () => {
       const now = context.currentTime;
-      gain.gain.cancelScheduledValues(now);
-      gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0001), now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+      mainGain.gain.cancelScheduledValues(now);
+      mainGain.gain.setValueAtTime(mainGain.gain.value, now);
+      mainGain.gain.exponentialRampToValueAtTime(0.0001, now + 2);
       window.setTimeout(() => {
-        oscillators.forEach(({ oscillator, lfo }) => {
-          oscillator.stop();
-          lfo.stop();
+        oscillators.forEach(o => {
+          o.osc.stop();
+          o.vLfo.stop();
         });
+        lfo.stop();
         void context.close();
-      }, 650);
+      }, 2100);
     }
   };
 }
