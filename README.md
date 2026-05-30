@@ -8,6 +8,8 @@
 
 Mystic Valley is a mobile-first interactive video H5 built with **Next.js 14**. The experience seamlessly blends a vertical narrative video with immersive game mechanics: collecting mystical items, environmental interactions, and ancient sigil puzzles.
 
+**🔗 [Live Demo / 演示地址](https://mystic-valley-mocha.vercel.app/)**
+
 ### 🌟 Features
 
 - **Immersive Narrative**: Vertical portrait video experience optimized for mobile devices.
@@ -62,6 +64,8 @@ To enable public access without authentication, ensure **Deployment Protection**
 ## 中文
 
 Mystic Valley 是一款基于 **Next.js 14** 开发的移动端优先互动视频 H5。该项目将竖屏叙事视频与沉浸式游戏机制完美融合：包括收集神秘道具、环境交互以及古老光阵解谜。
+
+**🔗 [Live Demo / 演示地址](https://mystic-valley-mocha.vercel.app/)**
 
 ### 🌟 核心特性
 
